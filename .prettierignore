@@ -1,0 +1,17 @@
+# Ignore all metadata XML files
+*.xml
+
+# Ignore Visualforce pages and components
+*.page
+*.component
+
+# Ignore Lightning component bundle files
+**/aura/**/*
+
+# Ignore Lightning Web Component bundle files
+**/lwc/**/*
+
+# Ignore other specific files or folders
+*.resource
+*.design
+*.svg
