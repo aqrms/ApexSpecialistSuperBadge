@@ -22,6 +22,24 @@ public with sharing class MaintenanceRequestHelper {
         }
 
         insert nextMaintenanceRequest;
+
+        List<Equipment_Maintenance_item__c> newMaintenanceRequestItems = new List<Equipment_Maintenance_item__c>();
+
+        List<Equipment_Maintenance_item__c> existingMaintenanceItems = [
+            SELECT Id, Eqipment__c, Maintenance_Request__c
+            FROM Equipment_Maintenance_Item__c
+            WHERE Maintenance_Request__c IN :closedRequest
+        ];
+
+        for (Equipment_Maintenance_Item__c item : existingMaintenanceItems) {
+            if (oldToNewCaseMap.containsKey(item.Maintenance_Request__c)) {
+                Equipment_Maintenance_Item__c newItem = item.clone();
+                newItem.Maintenance_Request__c = oldToNewCaseMap.get(item.Maintenance_Request__c).Id;
+                newMaintenanceRequestItems.add(newItem);
+            }
+        }
+
+        insert newMaintenanceRequestItems;
     }
 
     public static Map<Id, Integer> getMinCycleMap(List<Case> closedRequest) {
