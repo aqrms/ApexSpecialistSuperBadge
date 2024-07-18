@@ -1,6 +1,7 @@
 public with sharing class MaintenanceRequestHelper {
     public static void createNextMaintenanceRequest(List<Case> closedRequest) {
         List<Case> nextMaintenanceRequest = new List<Case>();
+        Map<Id, Case> oldToNewCaseMap = new Map<Id, Case>();
 
         Map<Id, Integer> cycleMap = getMinCycleMap(closedRequest);
 
@@ -18,6 +19,7 @@ public with sharing class MaintenanceRequestHelper {
                 );
 
                 nextMaintenanceRequest.add(newRequest);
+                oldToNewCaseMap.put(c.id, newRequest);
             }
         }
 
@@ -26,7 +28,7 @@ public with sharing class MaintenanceRequestHelper {
         List<Equipment_Maintenance_item__c> newMaintenanceRequestItems = new List<Equipment_Maintenance_item__c>();
 
         List<Equipment_Maintenance_item__c> existingMaintenanceItems = [
-            SELECT Id, Eqipment__c, Maintenance_Request__c
+            SELECT Id, Equipment__c, Maintenance_Request__c
             FROM Equipment_Maintenance_Item__c
             WHERE Maintenance_Request__c IN :closedRequest
         ];
@@ -52,7 +54,7 @@ public with sharing class MaintenanceRequestHelper {
 
         Map<Id, Integer> cycleMap = new Map<Id, Integer>();
         for (AggregateResult aggRes : aggResults) {
-            cycleMap.put((Id) aggRes.get('Maintenance_Request__c'), (Integer) aggRes.get('minCycle'));
+            cycleMap.put((Id) aggRes.get('Maintenance_Request__c'), Integer.valueOf(aggRes.get('minCycle')));
         }
 
         return cycleMap;
