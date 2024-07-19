@@ -20,7 +20,7 @@
  * See the Apex Language Reference for more information about Testing and Code Coverage.
  */
 @isTest
-private class MaintenanceRequestTest {
+private class MaintenanceRequestHelperTest {
     @testSetup
     static void setupTestData() {
         Vehicle__c vehicle = new Vehicle__c(Name = 'Test Vehicle');
@@ -35,7 +35,61 @@ private class MaintenanceRequestTest {
     }
 
     @isTest
-    static void testBulkMaintenanceRequestCreation() {
+    static void testPositiveMaintenanceRequestCreation() {
+        Product2 equipment = [SELECT Id FROM Product2 LIMIT 1];
+        Vehicle__c vehicle = [SELECT Id FROM Vehicle__c LIMIT 1];
+
+        Case maintenanceRequest = new Case(
+            Type = 'Routine Maintenance',
+            Status = 'New',
+            Origin = 'Phone',
+            Subject = 'Routine Checkup',
+            Vehicle__c = vehicle.Id
+        );
+
+        insert maintenanceRequest;
+
+        Equipment_Maintenance_Item__c equipmentMaintenanceItem = new Equipment_Maintenance_Item__c(
+            Equipment__c = equipment.Id,
+            Maintenance_Request__c = maintenanceRequest.Id
+        );
+        insert equipmentMaintenanceItem;
+
+        Test.startTest();
+        maintenanceRequest.Status = 'Closed';
+        update maintenanceRequest;
+        Test.stopTest();
+
+        List<Case> nextRoutineMaintenanceRequests = [
+            SELECT Id, ParentId, Vehicle__c, Type, Date_Reported__c, Date_Due__c, Subject, Status, Origin
+            FROM Case
+            WHERE ParentId = :maintenanceRequest.Id
+        ];
+        List<Equipment_Maintenance_Item__c> newItems = [
+            SELECT Id, Equipment__c
+            FROM Equipment_Maintenance_Item__c
+            WHERE Maintenance_Request__c = :nextRoutineMaintenanceRequests[0].Id
+        ];
+
+        System.assertEquals(1, nextRoutineMaintenanceRequests.size(), 'Expected to find next maintenance request');
+        Case newRequest = nextRoutineMaintenanceRequests[0];
+        System.assertEquals(maintenanceRequest.Id, newRequest.ParentId);
+        System.assertEquals(vehicle.Id, newRequest.Vehicle__c);
+        System.assertEquals(equipment.Id, newItems[0].Equipment__c);
+        System.assertEquals(Date.today(), newRequest.Date_Reported__c);
+        System.assertEquals(Date.today().addDays(10), newRequest.Date_Due__c);
+        System.assertEquals('Routine Maintenance', newRequest.Type);
+        System.assertEquals('Routine Checkup', newRequest.Subject);
+        System.assertEquals('New', newRequest.Status);
+        System.assertEquals('Phone', newRequest.Origin);
+    }
+
+    // @isTest
+    // static void testNegativeMaintenanceRequestCreation() {
+    // }
+
+    @isTest
+    static void testBulkmaintenanceRequestCreation() {
         Vehicle__c vehicle = [SELECT Id FROM Vehicle__c LIMIT 1];
         Product2 equipment = [SELECT Id FROM Product2 LIMIT 1];
 

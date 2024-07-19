@@ -27,5 +27,7 @@
     "prettier.printWidth": 120,
     "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
     "editor.guides.bracketPairs": true,
-    "salesforcedx-vscode-apex.enable-semantic-errors": true
+    "salesforcedx-vscode-apex.enable-semantic-errors": false,
+    "apex.trace.server": "messages",
+    "apexPMD.enableCache": false
 }
