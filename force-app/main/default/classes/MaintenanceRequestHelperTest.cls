@@ -39,7 +39,7 @@ private class MaintenanceRequestHelperTest {
         Product2 equipment = [SELECT Id FROM Product2 LIMIT 1];
         Vehicle__c vehicle = [SELECT Id FROM Vehicle__c LIMIT 1];
 
-        Case maintenanceRequest = new Case(
+        Case notVaildmaintenanceRequest = new Case(
             Type = 'Routine Maintenance',
             Status = 'New',
             Origin = 'Phone',
@@ -47,23 +47,23 @@ private class MaintenanceRequestHelperTest {
             Vehicle__c = vehicle.Id
         );
 
-        insert maintenanceRequest;
+        insert notVaildmaintenanceRequest;
 
         Equipment_Maintenance_Item__c equipmentMaintenanceItem = new Equipment_Maintenance_Item__c(
             Equipment__c = equipment.Id,
-            Maintenance_Request__c = maintenanceRequest.Id
+            Maintenance_Request__c = notVaildmaintenanceRequest.Id
         );
         insert equipmentMaintenanceItem;
 
         Test.startTest();
-        maintenanceRequest.Status = 'Closed';
-        update maintenanceRequest;
+        notVaildmaintenanceRequest.Status = 'Closed';
+        update notVaildmaintenanceRequest;
         Test.stopTest();
 
         List<Case> nextRoutineMaintenanceRequests = [
             SELECT Id, ParentId, Vehicle__c, Type, Date_Reported__c, Date_Due__c, Subject, Status, Origin
             FROM Case
-            WHERE ParentId = :maintenanceRequest.Id
+            WHERE ParentId = :notVaildmaintenanceRequest.Id
         ];
         List<Equipment_Maintenance_Item__c> newItems = [
             SELECT Id, Equipment__c
@@ -73,7 +73,7 @@ private class MaintenanceRequestHelperTest {
 
         System.assertEquals(1, nextRoutineMaintenanceRequests.size(), 'Expected to find next maintenance request');
         Case newRequest = nextRoutineMaintenanceRequests[0];
-        System.assertEquals(maintenanceRequest.Id, newRequest.ParentId);
+        System.assertEquals(notVaildmaintenanceRequest.Id, newRequest.ParentId);
         System.assertEquals(vehicle.Id, newRequest.Vehicle__c);
         System.assertEquals(equipment.Id, newItems[0].Equipment__c);
         System.assertEquals(Date.today(), newRequest.Date_Reported__c);
@@ -84,9 +84,40 @@ private class MaintenanceRequestHelperTest {
         System.assertEquals('Phone', newRequest.Origin);
     }
 
-    // @isTest
-    // static void testNegativeMaintenanceRequestCreation() {
-    // }
+    @isTest
+    static void testNegativeMaintenanceRequestCreation() {
+        Product2 equipment = [SELECT Id FROM Product2 LIMIT 1];
+        Vehicle__c vehicle = [SELECT Id FROM Vehicle__c LIMIT 1];
+
+        Case notVaildmaintenanceRequest = new Case(
+            Type = 'Other',
+            Status = 'New',
+            Origin = 'Phone',
+            Subject = 'Routine Checkup',
+            Vehicle__c = vehicle.Id
+        );
+
+        insert notVaildmaintenanceRequest;
+
+        Equipment_Maintenance_Item__c equipmentMaintenanceItem = new Equipment_Maintenance_Item__c(
+            Equipment__c = equipment.Id,
+            Maintenance_Request__c = notVaildmaintenanceRequest.Id
+        );
+        insert equipmentMaintenanceItem;
+
+        Test.startTest();
+        notVaildmaintenanceRequest.Status = 'Closed';
+        update notVaildmaintenanceRequest;
+        Test.stopTest();
+
+        List<Case> nextRoutineMaintenanceRequests = [
+            SELECT Id, ParentId, Vehicle__c, Type, Date_Reported__c, Date_Due__c, Subject, Status, Origin
+            FROM Case
+            WHERE ParentId = :notVaildmaintenanceRequest.Id
+        ];
+
+        System.assertEquals(0, nextRoutineMaintenanceRequests.size(), 'Expected not to find next maintenance request');
+    }
 
     @isTest
     static void testBulkmaintenanceRequestCreation() {
