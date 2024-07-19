@@ -1,5 +1,6 @@
 @isTest
 global with sharing class WarehouseCalloutServiceMock implements HttpCalloutMock {
+    
     global HTTPResponse respond(HTTPRequest request) {
         HttpResponse response = new HttpResponse();
         response.setHeader('Content-type', 'application/json');
